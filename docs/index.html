@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>simple_graph - Graph Data Structures for Eiffel</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="images/logo.png">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="images/logo.png" alt="simple_* logo" class="logo">
+        </div>
+        <h1>simple_graph</h1>
+        <p class="tagline">Graph Data Structures with Traversal and Shortest Path Algorithms</p>
+        <div class="badges">
+            <span class="badge badge-rfc">Service Layer</span>
+            <span class="badge badge-version">v1.0.0</span>
+            <span class="badge badge-license">MIT</span>
+        </div>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="#overview">Overview</a></li>
+            <li><a href="#quick-start">Quick Start</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#api">API Reference</a></li>
+            <li><a href="https://github.com/simple-eiffel/simple_graph">GitHub</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="overview">
+            <h2>Overview</h2>
+            <p>
+                <strong>simple_graph</strong> provides a generic graph implementation using adjacency lists.
+                It supports both directed and undirected graphs with weighted edges, and includes common
+                graph algorithms like BFS, DFS, Dijkstra's shortest path, cycle detection, and topological sort.
+            </p>
+        </section>
+
+        <section id="quick-start">
+            <h2>Quick Start</h2>
+            <h3>Installation</h3>
+            <pre><code>&lt;library name="simple_graph" location="$SIMPLE_GRAPH\simple_graph.ecf"/&gt;</code></pre>
+
+            <h3>Basic Usage</h3>
+            <pre><code>local
+    g: SIMPLE_GRAPH [STRING]
+    a, b, c: INTEGER
+do
+    -- Create graph
+    create g.make  -- undirected
+
+    -- Add nodes
+    a := g.add_node ("Paris")
+    b := g.add_node ("London")
+    c := g.add_node ("Berlin")
+
+    -- Add edges
+    g.add_edge (a, b)
+    g.add_edge_weighted (b, c, 2.5)
+
+    -- Shortest path
+    path := g.dijkstra (a, c)
+    print ("Distance: " + g.shortest_distance (a, c).out)
+end</code></pre>
+        </section>
+
+        <section id="features">
+            <h2>Features</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>Generic Nodes</h4>
+                    <p>Store any data type via SIMPLE_GRAPH [G]</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Directed/Undirected</h4>
+                    <p>Support for both graph types</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Weighted Edges</h4>
+                    <p>Optional edge weights for shortest path</p>
+                </div>
+                <div class="feature-card">
+                    <h4>BFS/DFS</h4>
+                    <p>Breadth-first and depth-first traversal</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Dijkstra</h4>
+                    <p>Shortest path algorithm</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Topological Sort</h4>
+                    <p>Order nodes in directed acyclic graphs</p>
+                </div>
+            </div>
+
+            <h3>Directed Graph Example</h3>
+            <pre><code>local
+    g: SIMPLE_GRAPH [STRING]
+    sorted: ARRAYED_LIST [INTEGER]
+do
+    create g.make_directed
+
+    a := g.add_node ("Task A")
+    b := g.add_node ("Task B")
+    c := g.add_node ("Task C")
+
+    g.add_edge (a, b)  -- A -> B
+    g.add_edge (b, c)  -- B -> C
+
+    if not g.has_cycle then
+        sorted := g.topological_sort
+        -- Process tasks in dependency order
+    end
+end</code></pre>
+
+            <h3>Shortest Path Example</h3>
+            <pre><code>local
+    g: SIMPLE_GRAPH [STRING]
+    path: ARRAYED_LIST [INTEGER]
+do
+    create g.make
+    a := g.add_node ("A")
+    b := g.add_node ("B")
+    c := g.add_node ("C")
+
+    g.add_edge_weighted (a, b, 2.0)
+    g.add_edge_weighted (b, c, 3.0)
+    g.add_edge_weighted (a, c, 10.0)
+
+    -- Dijkstra finds shortest weighted path
+    path := g.dijkstra (a, c)
+    -- path = [A, B, C] with distance 5.0
+end</code></pre>
+        </section>
+
+        <section id="api">
+            <h2>API Reference</h2>
+
+            <div class="api-section">
+                <h3>make</h3>
+                <div class="signature">create g.make</div>
+                <p>Create undirected graph.</p>
+            </div>
+
+            <div class="api-section">
+                <h3>make_directed</h3>
+                <div class="signature">create g.make_directed</div>
+                <p>Create directed graph.</p>
+            </div>
+
+            <div class="api-section">
+                <h3>add_node (a_data: G): INTEGER</h3>
+                <div class="signature">id := g.add_node ("Paris")</div>
+                <p>Add node with data, return generated ID.</p>
+            </div>
+
+            <div class="api-section">
+                <h3>add_edge (a_from, a_to: INTEGER)</h3>
+                <div class="signature">g.add_edge (a, b)</div>
+                <p>Add edge with default weight 1.0.</p>
+            </div>
+
+            <div class="api-section">
+                <h3>add_edge_weighted (a_from, a_to: INTEGER; a_weight: REAL_64)</h3>
+                <div class="signature">g.add_edge_weighted (a, b, 2.5)</div>
+                <p>Add edge with specific weight.</p>
+            </div>
+
+            <h3>Traversal & Algorithms</h3>
+            <table>
+                <tr><th>Feature</th><th>Description</th></tr>
+                <tr><td><code>bfs (start)</code></td><td>Breadth-first search from node</td></tr>
+                <tr><td><code>dfs (start)</code></td><td>Depth-first search from node</td></tr>
+                <tr><td><code>dijkstra (start, end)</code></td><td>Shortest path (empty if none)</td></tr>
+                <tr><td><code>shortest_distance (start, end)</code></td><td>Shortest distance (-1 if none)</td></tr>
+                <tr><td><code>topological_sort</code></td><td>Topological order (DAG only)</td></tr>
+            </table>
+
+            <h3>Analysis</h3>
+            <table>
+                <tr><th>Feature</th><th>Type</th><th>Description</th></tr>
+                <tr><td><code>is_connected</code></td><td>BOOLEAN</td><td>All nodes reachable?</td></tr>
+                <tr><td><code>has_cycle</code></td><td>BOOLEAN</td><td>Contains a cycle?</td></tr>
+                <tr><td><code>degree (id)</code></td><td>INTEGER</td><td>Edge count for node</td></tr>
+                <tr><td><code>in_degree (id)</code></td><td>INTEGER</td><td>Incoming edges (directed)</td></tr>
+                <tr><td><code>out_degree (id)</code></td><td>INTEGER</td><td>Outgoing edges (directed)</td></tr>
+            </table>
+        </section>
+    </main>
+
+    <footer>
+        <p>Part of the <a href="https://github.com/simple-eiffel">simple_*</a> library collection</p>
+        <p class="copyright">MIT License - Copyright (c) 2024-2025, Larry Rix</p>
+    </footer>
+</body>
+</html>
