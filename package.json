@@ -1,0 +1,9 @@
+{
+  "name": "simple_graph",
+  "version": "0.1.0",
+  "description": "Simple Graph - Graph data structures with traversal and shortest path algorithms",
+  "author": "Larry Rix",
+  "license": "MIT",
+  "category": "math",
+  "keywords": ["graph", "nodes", "edges", "algorithms"]
+}
