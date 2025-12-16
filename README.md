@@ -25,12 +25,15 @@ Generic graph data structures with traversal and shortest path algorithms for Ei
 
 ## Installation
 
-1. Clone the repository
-2. Set environment variable: `SIMPLE_GRAPH=D:\path\to\simple_graph`
+1. Clone the repository to `D:\prod`
+2. Set the ecosystem environment variable (one-time setup for all simple_* libraries):
+   ```
+   SIMPLE_EIFFEL=D:\prod
+   ```
 3. Add to your ECF:
 
 ```xml
-<library name="simple_graph" location="$SIMPLE_GRAPH\simple_graph.ecf"/>
+<library name="simple_graph" location="$SIMPLE_EIFFEL/simple_graph/simple_graph.ecf"/>
 ```
 
 ## Dependencies
