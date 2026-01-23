@@ -5,7 +5,7 @@ note
 	revision: "$Revision$"
 
 class
-	SIMPLE_GRAPH [G -> ANY]
+	SIMPLE_GRAPH [G -> detachable separate ANY]
 
 create
 	make,
@@ -131,6 +131,8 @@ feature -- Access
 					l_edges.forth
 				end
 			end
+		ensure
+			all_neighbors_are_nodes: across Result as ic all has_node (ic) end
 		end
 
 	edge_weight (a_from, a_to: INTEGER): REAL_64
@@ -206,6 +208,88 @@ feature -- Access
 			end
 		end
 
+feature -- Model queries (specification support)
+
+	model_nodes: MML_SET [INTEGER]
+			-- Set of all node IDs in the graph.
+		do
+			create Result
+			across nodes.current_keys as ic loop
+				Result := Result & ic
+			end
+		ensure
+			count_matches: Result.count = node_count
+			all_valid: Result.for_all (agent has_node)
+		end
+
+	model_edges: MML_RELATION [INTEGER, INTEGER]
+			-- Relation of edge pairs (from_node, to_node).
+			-- For undirected graphs, each edge appears once (lower ID first).
+		local
+			l_edges: detachable ARRAYED_LIST [SIMPLE_GRAPH_EDGE]
+			l_from: INTEGER
+			l_pair_seen: HASH_TABLE [BOOLEAN, STRING]
+			l_key: STRING
+		do
+			create Result
+			create l_pair_seen.make (edge_count)
+			from adjacency.start
+			until adjacency.after
+			loop
+				l_from := adjacency.key_for_iteration
+				l_edges := adjacency.item_for_iteration
+				if l_edges /= Void then
+					from l_edges.start
+					until l_edges.after
+					loop
+						if is_directed then
+							Result := Result.extended (l_from, l_edges.item.to_node)
+						else
+							-- For undirected, store canonical form (smaller first)
+							l_key := l_from.min (l_edges.item.to_node).out + "-" + l_from.max (l_edges.item.to_node).out
+							if not l_pair_seen.has (l_key) then
+								l_pair_seen.put (True, l_key)
+								Result := Result.extended (l_from.min (l_edges.item.to_node), l_from.max (l_edges.item.to_node))
+							end
+						end
+						l_edges.forth
+					end
+				end
+				adjacency.forth
+			end
+		ensure
+			count_matches: Result.count = edge_count
+		end
+
+	model_adjacency: MML_MAP [INTEGER, MML_SET [INTEGER]]
+			-- Map from each node to its set of neighbors.
+		local
+			l_edges: detachable ARRAYED_LIST [SIMPLE_GRAPH_EDGE]
+			l_node_id: INTEGER
+			l_neighbors_set: MML_SET [INTEGER]
+		do
+			create Result
+			from nodes.start
+			until nodes.after
+			loop
+				l_node_id := nodes.key_for_iteration
+				create l_neighbors_set
+				l_edges := adjacency.item (l_node_id)
+				if l_edges /= Void then
+					from l_edges.start
+					until l_edges.after
+					loop
+						l_neighbors_set := l_neighbors_set & l_edges.item.to_node
+						l_edges.forth
+					end
+				end
+				Result := Result.updated (l_node_id, l_neighbors_set)
+				nodes.forth
+			end
+		ensure
+			domain_matches: Result.domain |=| model_nodes
+		end
+
 feature -- Element change
 
 	add_node (a_data: G): INTEGER
@@ -218,6 +302,8 @@ feature -- Element change
 		ensure
 			node_added: has_node (Result)
 			count_increased: node_count = old node_count + 1
+			model_extended: model_nodes |=| (old model_nodes & Result)
+			edges_unchanged: model_edges |=| old model_edges
 		end
 
 	add_node_with_id (a_id: INTEGER; a_data: G)
@@ -234,6 +320,8 @@ feature -- Element change
 		ensure
 			node_added: has_node (a_id)
 			count_increased: node_count = old node_count + 1
+			model_extended: model_nodes |=| (old model_nodes & a_id)
+			edges_unchanged: model_edges |=| old model_edges
 		end
 
 	add_edge (a_from, a_to: INTEGER)
@@ -245,6 +333,7 @@ feature -- Element change
 			add_edge_weighted (a_from, a_to, 1.0)
 		ensure
 			edge_exists: has_edge (a_from, a_to)
+			nodes_unchanged: model_nodes |=| old model_nodes
 		end
 
 	add_edge_weighted (a_from, a_to: INTEGER; a_weight: REAL_64)
@@ -271,6 +360,7 @@ feature -- Element change
 		ensure
 			edge_exists: has_edge (a_from, a_to)
 			reverse_for_undirected: not is_directed and a_from /= a_to implies has_edge (a_to, a_from)
+			nodes_unchanged: model_nodes |=| old model_nodes
 		end
 
 	remove_node (a_id: INTEGER)
@@ -304,6 +394,8 @@ feature -- Element change
 		ensure
 			node_removed: not has_node (a_id)
 			count_decreased: node_count = old node_count - 1
+			model_reduced: model_nodes |=| (old model_nodes / a_id)
+			no_edges_involving_node: not model_edges.domain [a_id] and not model_edges.range [a_id]
 		end
 
 	remove_edge (a_from, a_to: INTEGER)
@@ -341,6 +433,7 @@ feature -- Element change
 			end
 		ensure
 			edge_removed: not has_edge (a_from, a_to)
+			nodes_unchanged: model_nodes |=| old model_nodes
 		end
 
 	clear
@@ -351,6 +444,8 @@ feature -- Element change
 			next_id := 1
 		ensure
 			empty: is_empty
+			model_nodes_empty: model_nodes.is_empty
+			model_edges_empty: model_edges.is_empty
 		end
 
 feature -- Traversal
@@ -790,5 +885,7 @@ feature {NONE} -- Implementation
 
 invariant
 	valid_next_id: next_id >= 1
+	edges_valid: model_edges.domain <= model_nodes and model_edges.range <= model_nodes
+	adjacency_consistent: model_adjacency.domain |=| model_nodes
 
 end
