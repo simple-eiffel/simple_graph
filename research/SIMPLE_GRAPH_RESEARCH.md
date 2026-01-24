@@ -1,5 +1,8 @@
 # simple_graph Research Notes
 
+
+**Date**: 2025-12-13
+
 ## Step 1: Specifications
 
 ### Formal Graph Definition
